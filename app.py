@@ -6,6 +6,28 @@ from openai import OpenAI
 import yaml
 import io
 from docx import Document
+import streamlit as st
+import hmac
+
+def require_password():
+    if st.session_state.get("auth_ok"):
+        return
+
+    st.title("Voce del Piatto")
+    st.caption("Accesso riservato")
+
+    pwd = st.text_input("Password", type="password")
+    if st.button("Entra", use_container_width=True):
+        secret = st.secrets.get("APP_PASSWORD", "")
+        if secret and hmac.compare_digest(pwd, secret):
+            st.session_state["auth_ok"] = True
+            st.rerun()
+        else:
+            st.error("Password non corretta.")
+
+    st.stop()
+
+require_password()
 
 # =====================
 # Config
