@@ -70,6 +70,8 @@ if "confirmed" not in st.session_state:
     st.session_state.confirmed = False
 if "recipe_confirmed" not in st.session_state:
     st.session_state.recipe_confirmed = False
+if "last_confirmed_ricetta" not in st.session_state:
+    st.session_state.last_confirmed_ricetta = ""
 
 def reset_confirmation():
     st.session_state.recipe_confirmed = False
@@ -451,6 +453,7 @@ with center:
     if st.button("✅ Conferma Ricetta", type="primary", use_container_width=True):
         if val_ricetta.strip():
             st.session_state.recipe_confirmed = True
+            st.session_state.last_confirmed_ricetta = val_ricetta
             st.rerun()
         else:
             st.warning("La ricetta è vuota.")
@@ -469,6 +472,12 @@ with right:
     ricetta = (st.session_state.ricetta or "").strip()
 
     if genera:
+        # SICUREZZA: Verifica se il testo è cambiato rispetto all'ultima conferma
+        if st.session_state.get("recipe_confirmed") and ricetta != st.session_state.get("last_confirmed_ricetta", ""):
+            st.session_state.recipe_confirmed = False
+            st.error("⚠️ Hai modificato il testo: devi confermare di nuovo la ricetta.")
+            st.stop()
+
         if not ricetta:
              # Should be caught by disabled, but safety check
             st.error("Manca la ricetta.")
