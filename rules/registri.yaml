@@ -1,0 +1,27 @@
+registri:
+  Classico elegante: "Registro sobrio e professionale, di tradizione.
+    Frasi complete e lineari, tono misurato.
+    Focus su ingredienti, tecnica e risultato (equilibrio, finezza, pulizia).
+    Ammessi: termini tecnici (tostatura, cottura, mantecatura), qualità oggettive (stagionatura, DOP).
+    Vietati: metafore, teatralità, superlativi, linguaggio emotivo/sensoriale spinto.
+    Lunghezza: Menu corto 2–3 frasi, lungo max 4; Cameriere corto 2–3 frasi, lungo max 5."
+  Territoriale evocativo: "Identità di luogo e materia prima, con sobrietà.
+    Il territorio serve il piatto: ingredienti e tecnica restano centrali.
+    Ammessi riferimenti concreti: area geografica, stagionalità, filiera, tradizione culinaria (senza folklore).
+    Vietati stereotipi, linguaggio turistico, dialettismi, romanticismi generici.
+    Ogni frase deve contenere almeno un ingrediente o una tecnica reale.
+    Lunghezza: Menu corto 1–2 frasi, lungo max 3; Cameriere corto 2 frasi, lungo max 4."
+  Minimal contemporaneo: "Essenzialità e precisione.
+    Linguaggio asciutto, informativo, senza narrazione.
+    Focus su ingredienti principali e tecnica chiave.
+    Frasi brevi, struttura semplice, nessun aggettivo superfluo.
+    Vietati evocazione, sensorialità marcata, metafore e giudizi.
+    Lunghezza: Menu corto 1 frase, lungo max 2; Cameriere corto 1–2 frasi, lungo max 3."
+  Sensoriale intenso: "Descrizione sensoriale concreta e guidata (non poetica).Il cibo è sempre il soggetto. Struttura: materia/tecnica → sensazione primaria → contrasto o chiusura. Lessico ammesso: consistenze (croccante, vellutato, tenero, poroso, cremoso),aromi (tostato, agrumato, terroso, balsamico), gusti (dolcezza, sapidità, acidità),dinamiche (sprigiona, emerge, avvolge). Vietate metafore narrative e superlativi.Lunghezza: Cameriere corto 2 frasi, lungo max 3; Menu corto 1 frase, lungo max 2."
+  Narrativo emozionale: "Evocativo leggero e controllato. Il focus resta sul cibo: ingredienti e tecniche sono sempre il soggetto.Linguaggio caldo ma misurato, senza metafore narrative.Frasi brevi, massimo 2 frasi per versione corta e 4 per versione lunga. Ogni frase deve citare almeno un ingrediente o una tecnica reale."
+hard_rules:
+  - "Non inventare ingredienti."
+  - "Non alterare tecniche o cotture."
+  - "Evita claim salutistici o promesse."
+  - "Se un dato manca, omettilo (non indovinare)."
+  - "Output solo testo finale, senza spiegazioni."
