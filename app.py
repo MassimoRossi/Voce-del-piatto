@@ -6,7 +6,7 @@ from openai import OpenAI
 import yaml
 import io
 from docx import Document
-import streamlit as st
+
 import hmac
 
 def require_password():
@@ -93,17 +93,17 @@ def extract_text_from_image(image_bytes: bytes, mime: str) -> str:
         "Output: SOLO il testo estratto."
     )
 
-    resp = client.responses.create(
+    resp = client.chat.completions.create(
         model=VISION_MODEL,
-        input=[{
+        messages=[{
             "role": "user",
             "content": [
-                {"type": "input_text", "text": prompt},
-                {"type": "input_image", "image_url": data_url},
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {"url": data_url}},
             ]
         }]
     )
-    return (resp.output_text or "").strip()
+    return (resp.choices[0].message.content or "").strip()
 
 def transcribe_audio_bytes(audio_bytes: bytes, suffix: str) -> str:
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
@@ -124,28 +124,38 @@ def transcribe_audio_bytes(audio_bytes: bytes, suffix: str) -> str:
 
 def generate_output(ricetta: str, registro: str, out_type: str, length: str) -> str:
     reg_hint = REGISTRI[registro]
+
     user_prompt = f"""
-REGISTRO: {registro}
-GUIDA REGISTRO: {reg_hint}
+Sei un copywriter gastronomico specializzato.
+Il tuo compito è scrivere la descrizione di un piatto basandoti sulla ricetta fornita.
 
-OUTPUT: {out_type}  (Menu o Cameriere)
-LUNGHEZZA: {length} (Corto o Lungo)
+COMANDO: Devi generare SOLAMENTE la versione: {out_type} {length}.
+NON generare altre varianti.
+NON generare introduzioni o spiegazioni.
+NON unire più versioni (es. se chiesto Menu, NON fare Cameriere).
 
-REGOLE HARD:
+REGISTRO RICHIESTO: {registro}
+DESCRIZIONE REGISTRO: {reg_hint}
+(Usa queste regole di stile SOLO per la versione {out_type} {length})
+
+REGOLE HARD (da rispettare sempre):
 - """ + "\n- ".join(HARD_RULES) + f"""
 
 RICETTA (testo sorgente):
 {ricetta}
+
+OUTPUT ATTESO:
+Scrivi SOLO il testo per {out_type} in formato {length}.
 """.strip()
 
-    resp = client.responses.create(
+    resp = client.chat.completions.create(
         model=GEN_MODEL,
-        input=[
+        messages=[
             {"role": "system", "content": SYSTEM_TXT},
             {"role": "user", "content": user_prompt},
         ],
     )
-    return (resp.output_text or "").strip()
+    return (resp.choices[0].message.content or "").strip()
 
 def translate_text(text: str, language: str, register: str) -> str:
     prompt = f"""
@@ -158,13 +168,13 @@ TESTO DA TRADURRE:
 {text}
 """.strip()
     
-    resp = client.responses.create(
+    resp = client.chat.completions.create(
         model=GEN_MODEL,
-        input=[
+        messages=[
             {"role": "user", "content": prompt},
         ],
     )
-    return (resp.output_text or "").strip()
+    return (resp.choices[0].message.content or "").strip()
 
 def export_docx(titolo: str, contenuto: str) -> bytes:
     doc = Document()
@@ -503,6 +513,7 @@ with right:
                     data=docx_bytes,
                     file_name=filename,
                     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    key=f"btn_dl_{r.replace(' ', '_')}"
                 )
 
     else:
