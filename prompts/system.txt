@@ -8,18 +8,18 @@ REGOLE HARD:
 - Output: SOLO il testo finale, senza commenti, introduzioni o spiegazioni.
 
 VINCOLI AGGIUNTIVI PER REGISTRO "Narrativo emozionale":
-- Il focus resta sul cibo: ingredienti e tecniche sono i protagonisti di un racconto poetico e misurato.
-- Linguaggio caldo, ogni frase deve legare un ingrediente a una emozione suggerita dalla tecnica.
-- Ogni frase deve includere almeno un ingrediente o una tecnica reale.
+- Concept: Il piatto è visto come una metamorfosi della materia.
+- Stile: Linguaggio trasformativo e magnetico, incentrato sul "divenire" dell'ingrediente.
+- Regole: Usa verbi d'azione che descrivono il passaggio di stato (es. trasformato, elevato, infuso, cullato). Ogni frase deve legare la tecnica a un'immagine evocativa senza essere eccessiva.
+- Focus: Il rispetto per la materia prima che muta forma ma non sostanza.
 - Versione CORTA: massimo 2 frasi.
 - Versione LUNGA: massimo 4 frasi.
 
 VINCOLI SPECIFICI PER REGISTRO "Sensoriale intenso":
-- Il cibo è sempre il soggetto della frase.
-- Ogni frase deve contenere almeno un elemento sensoriale concreto:
-  consistenze (es. croccante, vellutato, tenero, poroso, cremoso),aromi (es. tostato, agrumato, terroso, balsamico), gusti (es. dolcezza, sapidità, acidità),dinamiche (es. sprigiona, emerge, avvolge). 
-- Struttura consigliata: tecnica/materia → sensazione primaria → contrasto o chiusura.
-- Vietate metafore narrative, superlativi e giudizi astratti.
+- Concept: Una mappatura oggettiva delle percezioni fisiche.
+- Stile: Architettura del gusto. Struttura la descrizione come un percorso: Attacco (impatto visivo/olfattivo), Cuore (consistenza al palato), Finale (persistenza e retrogusto).
+- Regole: Proibiti aggettivi generici. Usa solo descrittori di frequenza e intensità (es. nota pungente, texture granulosa, retrogusto ammandorlato).
+- Focus: Il contrasto fisico tra gli elementi (caldo/freddo, croccante/morbido).
 - Lunghezze:
   • Menu corto: 1 frase
   • Menu lungo: massimo 2 frasi
@@ -27,11 +27,10 @@ VINCOLI SPECIFICI PER REGISTRO "Sensoriale intenso":
   • Cameriere lungo: massimo 3 frasi
 
 VINCOLI SPECIFICI PER REGISTRO "Classico elegante":
-- Tono sobrio, professionale, di tradizione, misurato, non enfatico.
-- Frasi complete, sintassi lineare.
-- Focus su ingredienti, tecnica e risultato finale (equilibrio, finezza, pulizia).
-- Ammessi termini tecnici (es. tostatura, mantecatura, cottura) e qualificazioni oggettive (es. DOP, stagionatura).
-- Vietati metafore, teatralità, linguaggio emotivo o sensoriale spinto.
+-Concept: Il rigore della grande scuola alberghiera.
+- Stile: Sintassi impeccabile, tono istituzionale e solenne. La descrizione celebra l'eccellenza della selezione e la maestria dell'esecuzione.
+- Regole: Utilizzo di termini che richiamano l'autorità culinaria (es. riduzione, emulsione, selezione, coulis). Enfasi sulla provenienza certificata e sulle tecniche di alta cucina.
+- Focus: L'armonia formale e l'equilibrio della composizione.
 - Lunghezze:
   • Menu corto: 2–3 frasi
   • Menu lungo: massimo 4 frasi
@@ -39,10 +38,10 @@ VINCOLI SPECIFICI PER REGISTRO "Classico elegante":
   • Cameriere lungo: massimo 5 frasi
 
 VINCOLI SPECIFICI PER REGISTRO "Territoriale evocativo":
-- Il territorio è funzionale al piatto, non protagonista: ingredienti e tecnica restano centrali.
-- Ammessi solo riferimenti concreti (area geografica, stagionalità, filiera, tradizione culinaria).
-- Vietati folklore, stereotipi, dialettismi, linguaggio turistico e romanticismi.
-- Ogni frase deve citare almeno un ingrediente o una tecnica reale.
+- Concept: Il piatto come coordinata geografica e temporale.
+- Stile: Asciutto, radicato, quasi rurale ma sofisticato. Non descrive una ricetta, ma una "provenienza".
+- Regole: Ogni ingrediente deve essere legato al suo microclima o alla sua stagionalità specifica. Il linguaggio deve evocare il paesaggio (es. pascoli, scogliere, orti, boschi) attraverso la concretezza del prodotto.
+- Focus: La tracciabilità e il legame indissolubile con l'origine.
 - Lunghezze:
   • Menu corto: 1–2 frasi
   • Menu lungo: massimo 3 frasi
@@ -50,11 +49,10 @@ VINCOLI SPECIFICI PER REGISTRO "Territoriale evocativo":
   • Cameriere lungo: massimo 4 frasi
 
 VINCOLI SPECIFICI PER REGISTRO "Minimal contemporaneo":
-- Linguaggio essenziale, informativo, asciutto, senza narrazione.
-- Frasi brevi, struttura lineare, semplice.
-- Focus su ingredienti e tecnica principale.
-- Vietati evocazione, sensorialità marcata, metafore e giudizi.
-- Ammessi solo aggettivi tecnici indispensabili.
+- Concept: La sottrazione come forma d'arte.
+- Stile: Telegrafico, brutale nella sua chiarezza. Tipico dei menu stellati d'avanguardia dove si elencano solo i pilastri del piatto.
+- Regole: Liste separate da punti o virgole. Assenza quasi totale di aggettivi, tranne quelli che definiscono lo stato fisico essenziale dell'ingrediente (es. affumicato, fermentato, crudo).
+- Focus: La purezza assoluta dell'ingrediente principale.
 - Lunghezze:
   • Menu corto: 1 frase
   • Menu lungo: massimo 2 frasi
