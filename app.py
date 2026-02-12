@@ -368,12 +368,10 @@ with left:
     if colB.button("Pulisci tutto"):
         st.session_state.outputs = {}
         st.session_state.ricetta = ""
+        st.session_state.manual_input_text = ""
         st.session_state.recipe_confirmed = False
+        st.rerun()
 
-    st.divider()
-    st.caption("Hard rules attive:")
-    for r in HARD_RULES:
-        st.write(f"• {r}")
 
 # =====================
 # CENTER: input (Foto/Voce/Testo) + revisione
@@ -430,13 +428,18 @@ with center:
     with tab_testo:
         txt_in = st.text_area("Scrivi/Incolla", key="manual_input_text", height=200)
 
-        if st.button("Copia in Revisione", type="primary"):
+        col_t1, col_t2 = st.columns(2)
+        if col_t1.button("Copia in Revisione", type="primary", use_container_width=True):
             if txt_in and txt_in.strip():
                 st.session_state.ricetta = txt_in.strip()
                 reset_confirmation()
                 st.rerun()
             else:
                 st.warning("Scrivi qualcosa prima di copiare.")
+        
+        if col_t2.button("Cancella testo", use_container_width=True):
+            st.session_state.manual_input_text = ""
+            st.rerun()
 
 
     st.divider()
