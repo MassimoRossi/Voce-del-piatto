@@ -66,6 +66,8 @@ if "last_params" not in st.session_state:
 
 if "draft_text" not in st.session_state:
     st.session_state.draft_text = ""
+if "manual_input_text" not in st.session_state:
+    st.session_state.manual_input_text = ""
 if "confirmed" not in st.session_state:
     st.session_state.confirmed = False
 if "recipe_confirmed" not in st.session_state:
@@ -75,6 +77,15 @@ if "last_confirmed_ricetta" not in st.session_state:
 
 def reset_confirmation():
     st.session_state.recipe_confirmed = False
+
+def clear_all_callback():
+    st.session_state.outputs = {}
+    st.session_state.ricetta = ""
+    st.session_state.manual_input_text = ""
+    st.session_state.recipe_confirmed = False
+
+def clear_manual_input_callback():
+    st.session_state.manual_input_text = ""
 
 # =====================
 # Helpers
@@ -365,12 +376,8 @@ with left:
     colA, colB = st.columns(2)
     if colA.button("Pulisci output"):
         st.session_state.outputs = {}
-    if colB.button("Pulisci tutto"):
-        st.session_state.outputs = {}
-        st.session_state.ricetta = ""
-        st.session_state.manual_input_text = ""
-        st.session_state.recipe_confirmed = False
-        st.rerun()
+    if colB.button("Pulisci tutto", on_click=clear_all_callback):
+        pass
 
 
 # =====================
@@ -437,9 +444,8 @@ with center:
             else:
                 st.warning("Scrivi qualcosa prima di copiare.")
         
-        if col_t2.button("Cancella testo", use_container_width=True):
-            st.session_state.manual_input_text = ""
-            st.rerun()
+        if col_t2.button("Cancella testo", use_container_width=True, on_click=clear_manual_input_callback):
+            pass
 
 
     st.divider()
