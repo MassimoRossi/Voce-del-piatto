@@ -664,22 +664,14 @@ with right:
                     )
 
                 with col_d2:
-                    # Usiamo un contatore per forzare la chiusura del popover quando necessario
-                    pop_id_raw = r.replace(' ', '_')
-                    pop_key_id = f"pop_{pop_id_raw}"
-                    
-                    if pop_key_id not in st.session_state["pop_counters"]:
-                        st.session_state["pop_counters"][pop_key_id] = 0
-                    
-                    current_cnt = st.session_state["pop_counters"][pop_key_id]
-                    final_key = f"widget_{pop_key_id}_{current_cnt}"
-                    
-                    # Usiamo un popover per raccogliere titolo e tags in modo pulito
-                    with st.popover("Archivia piatto", key=final_key):
+                    # Alternativa stabile al popover per evitare TypeError in certi ambienti
+                    exp_key = f"exp_arch_{r.replace(' ', '_')}"
+                    with st.expander("📂 Archivia piatto", expanded=False):
                         st.subheader("Dati per l'archivio:")
                         
                         # --- SINCRONIZZAZIONE INTEGRATA ---
-                        with st.expander("🔄 Sincronizza archivio locale", expanded=not os.path.exists(ARCHIVE_FILE)):
+                        with st.container(border=True):
+                            st.write("🔄 Sincronizza archivio locale")
                             up_file = st.file_uploader("Carica il tuo Excel per non perdere le modifiche", type=["xlsx"], key=f"up_{r.replace(' ', '_')}")
                             if up_file:
                                 file_key = f"{up_file.name}_{up_file.size}"
@@ -690,6 +682,7 @@ with right:
                                     st.success("Archivio sincronizzato!")
                                     st.rerun()
                         
+                        st.write("---")
                         titolo_piatto = st.text_input("Titolo del piatto", key=f"title_{r.replace(' ', '_')}")
                         tags_piatto = st.text_input("Tags (es. mare, primo, etc.)", key=f"tags_{r.replace(' ', '_')}")
                         
@@ -717,7 +710,6 @@ with right:
                                         )
                                         
                                         if serial:
-                                            # Rilegge per avere la versione aggiornata
                                             with open(ARCHIVE_FILE, "rb") as f:
                                                 excel_bytes = f.read()
                                             
@@ -760,10 +752,7 @@ with right:
                                     use_container_width=True
                                 )
                         
-                        if st.button("Annulla / Chiudi", key=f"btn_canc_{r.replace(' ', '_')}", use_container_width=True):
-                            # Incrementiamo il contatore per forzare la chiusura del popover (cambiando la sua key)
-                            st.session_state["pop_counters"][pop_key_id] += 1
-                            # Pulisce anche i risultati precedenti
+                        if st.button("Pulisci / Chiudi", key=f"btn_canc_{r.replace(' ', '_')}", use_container_width=True):
                             if res_key in st.session_state.archival_results:
                                 del st.session_state.archival_results[res_key]
                             st.rerun()
