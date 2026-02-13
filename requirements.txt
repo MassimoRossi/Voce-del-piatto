@@ -2,4 +2,6 @@ streamlit>=1.33
 openai>=1.40.0
 pyyaml>=6.0.1
 python-docx
-
+pandas
+openpyxl
+requests

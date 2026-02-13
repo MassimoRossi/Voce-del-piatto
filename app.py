@@ -11,6 +11,19 @@ from datetime import datetime
 from docx import Document
 
 import hmac
+import zipfile
+
+def create_archive_zip():
+    """Crea un file ZIP contenente l'Excel e tutte le immagini archiviate."""
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, 'a', zipfile.ZIP_DEFLATED, False) as zip_file:
+        if os.path.exists(ARCHIVE_FILE):
+            zip_file.write(ARCHIVE_FILE, ARCHIVE_FILE)
+        if os.path.exists(IMAGES_DIR):
+            for root, dirs, files in os.walk(IMAGES_DIR):
+                for file in files:
+                    zip_file.write(os.path.join(root, file), os.path.join(IMAGES_DIR, file))
+    return buf.getvalue()
 
 # =====================
 # Archiving Logic (Merged from archive_manager.py)
@@ -406,11 +419,28 @@ if page == "Home":
           <div style="font-weight:700; color:#C9A227;">Output pronto</div>
           <div style="margin-top:6px;">Menu o sala, supporto lingue, export DOCX incluso.</div>
         </div>
-        """, unsafe_allow_html=True)
-
-    
     st.stop()
 
+# =====================
+# Sidebar: Cloud Info + Archive Management
+# =====================
+with st.sidebar:
+    st.subheader("Archivio")
+    if os.path.exists(ARCHIVE_FILE):
+        st.write("Scarica l'intero archivio (Excel + Immagini) per non perdere i dati:")
+        zip_data = create_archive_zip()
+        st.download_button(
+            "📦 Scarica Archivio Completo (ZIP)",
+            data=zip_data,
+            file_name="archivio_voce_del_piatto.zip",
+            mime="application/zip",
+            use_container_width=True
+        )
+    else:
+        st.info("L'archivio è vuoto. Archivia il primo piatto per vederlo qui.")
+    
+    st.divider()
+    st.caption("⚠️ Nota Cloud: I file salvati su Streamlit Cloud sono temporanei. Scarica l'archivio regolarmente.")
 
 reg_names = list(REGISTRI.keys())
 default_regs = [r for r in ["Minimal contemporaneo", "Classico elegante"] if r in reg_names]
