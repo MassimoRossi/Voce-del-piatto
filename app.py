@@ -9,9 +9,11 @@ import requests
 import pandas as pd
 from datetime import datetime
 from docx import Document
-
 import hmac
 import zipfile
+
+# CONFIGURAZIONE PAGINA (Deve essere il primo comando Streamlit)
+st.set_page_config(page_title="Voce del Piatto", layout="wide")
 
 def create_archive_zip():
     """Crea un file ZIP contenente l'Excel e tutte le immagini archiviate."""
@@ -131,7 +133,6 @@ require_password()
 # =====================
 # Config
 # =====================
-st.set_page_config(page_title="Voce del Piatto", layout="wide")  # wide per 3 colonne
 
 client = OpenAI()  # OPENAI_API_KEY da env / Streamlit Secrets
 
@@ -669,7 +670,7 @@ with right:
                         st.session_state.pop_counters[pop_key_id] = 0
                     
                     # Usiamo un popover per raccogliere titolo e tags in modo pulito
-                    with st.popover("Archivia piatto", use_container_width=True, key=f"{pop_key_id}_{st.session_state.pop_counters[pop_key_id]}"):
+                    with st.popover("Archivia piatto", key=f"{pop_key_id}_{st.session_state.pop_counters[pop_key_id]}"):
                         st.subheader("Dati per l'archivio:")
                         
                         # --- SINCRONIZZAZIONE INTEGRATA ---
