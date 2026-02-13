@@ -423,6 +423,18 @@ if page == "Home":
 # =====================
 with st.sidebar:
     st.subheader("Archivio")
+    
+    # --- SINCRONIZZAZIONE (Upload) ---
+    st.write("🔄 Sincronizza dati:")
+    up_file = st.file_uploader("Carica archivio Excel locale", type=["xlsx"], help="Carica il tuo file Excel se hai fatto modifiche manuali (es. tag aggiunti) per non perderle.")
+    if up_file:
+        with open(ARCHIVE_FILE, "wb") as f:
+            f.write(up_file.getbuffer())
+        st.success("Archivio sincronizzato!")
+
+    st.divider()
+
+    # --- DOWNLOAD ---
     if os.path.exists(ARCHIVE_FILE):
         st.write("Scarica l'intero archivio (Excel + Immagini) per non perdere i dati:")
         zip_data = create_archive_zip()
@@ -682,10 +694,14 @@ with right:
                                             )
                                             st.success(f"Piatto archiviato! (Seriale: {serial})")
                                             st.info(f"Immagine: {path}")
+                                            st.balloons()
                                         else:
                                             st.error("Errore generazione immagine.")
                                     except Exception as e:
                                         st.error(f"Errore durante l'archiviazione: {e}")
+                        
+                        if st.button("Annulla", key=f"btn_canc_{r.replace(' ', '_')}", use_container_width=True):
+                            st.rerun()
 
     else:
         st.markdown("""
