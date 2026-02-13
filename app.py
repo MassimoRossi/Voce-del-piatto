@@ -180,7 +180,7 @@ if "archival_results" not in st.session_state:
 
 # Contatori per resettare i popover
 if "pop_counters" not in st.session_state:
-    st.session_state.pop_counters = {}
+    st.session_state["pop_counters"] = {}
 
 def reset_confirmation():
     st.session_state.recipe_confirmed = False
@@ -665,12 +665,17 @@ with right:
 
                 with col_d2:
                     # Usiamo un contatore per forzare la chiusura del popover quando necessario
-                    pop_key_id = f"pop_{r.replace(' ', '_')}"
-                    if pop_key_id not in st.session_state.pop_counters:
-                        st.session_state.pop_counters[pop_key_id] = 0
+                    pop_id_raw = r.replace(' ', '_')
+                    pop_key_id = f"pop_{pop_id_raw}"
+                    
+                    if pop_key_id not in st.session_state["pop_counters"]:
+                        st.session_state["pop_counters"][pop_key_id] = 0
+                    
+                    current_cnt = st.session_state["pop_counters"][pop_key_id]
+                    final_key = f"widget_{pop_key_id}_{current_cnt}"
                     
                     # Usiamo un popover per raccogliere titolo e tags in modo pulito
-                    with st.popover(label="Archivia piatto", key=f"{pop_key_id}_{st.session_state.pop_counters[pop_key_id]}"):
+                    with st.popover("Archivia piatto", key=final_key):
                         st.subheader("Dati per l'archivio:")
                         
                         # --- SINCRONIZZAZIONE INTEGRATA ---
@@ -757,7 +762,7 @@ with right:
                         
                         if st.button("Annulla / Chiudi", key=f"btn_canc_{r.replace(' ', '_')}", use_container_width=True):
                             # Incrementiamo il contatore per forzare la chiusura del popover (cambiando la sua key)
-                            st.session_state.pop_counters[pop_key_id] += 1
+                            st.session_state["pop_counters"][pop_key_id] += 1
                             # Pulisce anche i risultati precedenti
                             if res_key in st.session_state.archival_results:
                                 del st.session_state.archival_results[res_key]
