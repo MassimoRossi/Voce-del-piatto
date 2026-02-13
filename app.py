@@ -61,18 +61,19 @@ def get_next_serial():
         return 1
 
 def add_archive_entry(titolo, ricetta, frase, immagine_bytes, tags):
-    """Aggiunge una riga all'archivio Excel e salva l'immagine."""
+    """Aggiunge una riga all'archivio Excel e salva l'immagine (se presente)."""
     initialize_archive()
     
     serial = get_next_serial()
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
-    # Salva immagine
-    img_filename = f"piatto_{serial}_{timestamp}.png"
-    img_path = os.path.join(IMAGES_DIR, img_filename)
-    
-    with open(img_path, "wb") as f:
-        f.write(immagine_bytes)
+    img_path = ""
+    if immagine_bytes:
+        # Salva immagine
+        img_filename = f"piatto_{serial}_{timestamp}.png"
+        img_path = os.path.join(IMAGES_DIR, img_filename)
+        with open(img_path, "wb") as f:
+            f.write(immagine_bytes)
     
     # Prepara dati
     new_data = {
@@ -87,14 +88,25 @@ def add_archive_entry(titolo, ricetta, frase, immagine_bytes, tags):
     
     # Carica, appendi e salva
     try:
-        df = pd.read_excel(ARCHIVE_FILE)
-        df = pd.concat([df, pd.DataFrame([new_data])], ignore_index=True)
-        df.to_excel(ARCHIVE_FILE, index=False)
+        # Leggi l'intero foglio per evitare sovrascritture parziali
+        if os.path.exists(ARCHIVE_FILE):
+            df = pd.read_excel(ARCHIVE_FILE)
+        else:
+            # Fallback se il file è sparito tra initialize e qui
+            df = pd.DataFrame(columns=["seriale", "titolo", "ricetta", "frase_iconica", "immagine_path", "tags", "data_archiviazione"])
+        
+        # Assicuriamoci che i tipi siano coerenti per il concat
+        new_row_df = pd.DataFrame([new_data])
+        df = pd.concat([df, new_row_df], ignore_index=True)
+        
+        # Salvataggio forzato su file
+        with pd.ExcelWriter(ARCHIVE_FILE, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False)
+            
+        return serial, img_path
     except Exception as e:
-        st.error(f"Errore salvataggio Excel: {e}")
-        return None, None
-    
-    return serial, img_path
+        # Non usare st.error qui se vogliamo che l'errore sia catturato dal chiamante
+        raise e
 
 def require_password():
     if st.session_state.get("auth_ok"):
@@ -288,14 +300,14 @@ def export_docx(titolo: str, contenuto: str) -> bytes:
     bio.seek(0)
     return bio.read()
 
-def generate_dish_image(ricetta: str):
+def generate_dish_image(ricetta: str, model="dall-e-3"):
     """Genera l'immagine del piatto in versione ristorante stellato tramite DALL-E."""
     prompt = f"A high-end, gourmet, michelin-starred restaurant version of the following dish: {ricetta}. Professional food photography, elegant plating, soft lighting."
     try:
         response = client.images.generate(
-            model="dall-e-3",
+            model=model,
             prompt=prompt,
-            size="1024x1024",
+            size="1024x1024" if model == "dall-e-3" else "512x512",
             quality="standard",
             n=1,
         )
@@ -303,7 +315,7 @@ def generate_dish_image(ricetta: str):
         img_data = requests.get(image_url).content
         return img_data
     except Exception as e:
-        st.error(f"Errore nella generazione dell'immagine: {e}")
+        st.error(f"Errore nella generazione dell'immagine ({model}): {e}")
         return None
 
 # =====================
@@ -673,30 +685,43 @@ with right:
                 with col_d2:
                     # Usiamo un popover per raccogliere titolo e tags in modo pulito
                     with st.popover("Archivia piatto", use_container_width=True):
-                        st.write("Dati per l'archivio:")
+                        st.subheader("Dati per l'archivio:")
                         titolo_piatto = st.text_input("Titolo del piatto", key=f"title_{r.replace(' ', '_')}")
                         tags_piatto = st.text_input("Tags (es. mare, primo, etc.)", key=f"tags_{r.replace(' ', '_')}")
+                        
+                        st.divider()
+                        do_gen_img = st.checkbox("Genera immagine AI", value=True, key=f"gen_img_{r.replace(' ', '_')}")
+                        img_model = st.selectbox("Modello immagine", ["dall-e-3", "dall-e-2"], index=0, key=f"model_img_{r.replace(' ', '_')}", disabled=not do_gen_img)
                         
                         if st.button("Conferma Archiviazione", key=f"btn_arch_{r.replace(' ', '_')}", type="primary", use_container_width=True):
                             if not titolo_piatto.strip():
                                 st.warning("Inserisci un titolo per il piatto.")
                             else:
-                                with st.spinner("Generazione immagine e salvataggio in corso..."):
+                                with st.spinner("Archiviazione in corso..."):
                                     try:
-                                        img_bytes = generate_dish_image(ricetta)
-                                        if img_bytes:
-                                            serial, path = add_archive_entry(
-                                                titolo=titolo_piatto.strip(),
-                                                ricetta=ricetta,
-                                                frase=txt,
-                                                immagine_bytes=img_bytes,
-                                                tags=tags_piatto.strip()
-                                            )
+                                        img_bytes = None
+                                        if do_gen_img:
+                                            with st.spinner(f"Generazione immagine ({img_model})..."):
+                                                img_bytes = generate_dish_image(ricetta, model=img_model)
+                                        
+                                        serial, path = add_archive_entry(
+                                            titolo=titolo_piatto.strip(),
+                                            ricetta=ricetta,
+                                            frase=txt,
+                                            immagine_bytes=img_bytes,
+                                            tags=tags_piatto.strip()
+                                        )
+                                        
+                                        if serial:
                                             st.success(f"Piatto archiviato! (Seriale: {serial})")
-                                            st.info(f"Immagine: {path}")
+                                            if path:
+                                                st.info(f"Immagine salvata in: {path}")
+                                            else:
+                                                st.info("Piatto salvato senza immagine.")
                                             st.balloons()
                                         else:
-                                            st.error("Errore generazione immagine.")
+                                            st.error("Errore durante il salvataggio dei dati.")
+                                            
                                     except Exception as e:
                                         st.error(f"Errore durante l'archiviazione: {e}")
                         
