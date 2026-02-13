@@ -5,9 +5,11 @@ import streamlit as st
 from openai import OpenAI
 import yaml
 import io
+import requests
 from docx import Document
 
 import hmac
+import archive_manager
 
 def require_password():
     if st.session_state.get("auth_ok"):
@@ -201,6 +203,24 @@ def export_docx(titolo: str, contenuto: str) -> bytes:
     bio.seek(0)
     return bio.read()
 
+def generate_dish_image(ricetta: str):
+    """Genera l'immagine del piatto in versione ristorante stellato tramite DALL-E."""
+    prompt = f"A high-end, gourmet, michelin-starred restaurant version of the following dish: {ricetta}. Professional food photography, elegant plating, soft lighting."
+    try:
+        response = client.images.generate(
+            model="dall-e-3",
+            prompt=prompt,
+            size="1024x1024",
+            quality="standard",
+            n=1,
+        )
+        image_url = response.data[0].url
+        img_data = requests.get(image_url).content
+        return img_data
+    except Exception as e:
+        st.error(f"Errore nella generazione dell'immagine: {e}")
+        return None
+
 # =====================
 # UX Fine: mini-CSS (pulizia visiva)
 # =====================
@@ -364,7 +384,7 @@ with left:
         is_confirmed = st.session_state.get("recipe_confirmed", False)
         
         extra_langs = st.multiselect(
-            "Lingue extra (appendi traduzione)",
+            "Lingue extra",
             ["Inglese", "Tedesco", "Francese", "Spagnolo"],
             default=[],
             key="sp_extra_langs"
@@ -526,13 +546,47 @@ with right:
                 filename = f"{r}_{params.get('tipo','')}_{params.get('lunghezza','')}.docx".replace(" ", "_")
                 titolo = f"Voce del Piatto — {r} — {params.get('tipo','')} — {params.get('lunghezza','')}"
                 docx_bytes = export_docx(titolo, txt)
-                st.download_button(
-                    "Scarica DOCX",
-                    data=docx_bytes,
-                    file_name=filename,
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    key=f"btn_dl_{r.replace(' ', '_')}"
-                )
+                # --- AZIONI (Download e Archiviazione) ---
+                col_d1, col_d2 = st.columns(2)
+                
+                with col_d1:
+                    st.download_button(
+                        "Scarica DOCX",
+                        data=docx_bytes,
+                        file_name=filename,
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        key=f"btn_dl_{r.replace(' ', '_')}",
+                        use_container_width=True
+                    )
+
+                with col_d2:
+                    # Usiamo un popover per raccogliere titolo e tags in modo pulito
+                    with st.popover("Archivia piatto", use_container_width=True):
+                        st.write("Dati per l'archivio:")
+                        titolo_piatto = st.text_input("Titolo del piatto", key=f"title_{r.replace(' ', '_')}")
+                        tags_piatto = st.text_input("Tags (es. mare, primo, etc.)", key=f"tags_{r.replace(' ', '_')}")
+                        
+                        if st.button("Conferma Archiviazione", key=f"btn_arch_{r.replace(' ', '_')}", type="primary", use_container_width=True):
+                            if not titolo_piatto.strip():
+                                st.warning("Inserisci un titolo per il piatto.")
+                            else:
+                                with st.spinner("Generazione immagine e salvataggio in corso..."):
+                                    try:
+                                        img_bytes = generate_dish_image(ricetta)
+                                        if img_bytes:
+                                            serial, path = archive_manager.add_entry(
+                                                titolo=titolo_piatto.strip(),
+                                                ricetta=ricetta,
+                                                frase=txt,
+                                                immagine_bytes=img_bytes,
+                                                tags=tags_piatto.strip()
+                                            )
+                                            st.success(f"Piatto archiviato! (Seriale: {serial})")
+                                            st.info(f"Immagine: {path}")
+                                        else:
+                                            st.error("Errore generazione immagine.")
+                                    except Exception as e:
+                                        st.error(f"Errore durante l'archiviazione: {e}")
 
     else:
         st.markdown("""
