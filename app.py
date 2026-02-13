@@ -1,11 +1,4 @@
 import os
-import sys
-
-# Assicura che la cartella corrente sia nel path per trovare archive_manager
-current_dir = os.path.dirname(os.path.abspath(__file__))
-if current_dir not in sys.path:
-    sys.path.append(current_dir)
-
 import base64
 import tempfile
 import streamlit as st
@@ -13,10 +6,82 @@ from openai import OpenAI
 import yaml
 import io
 import requests
+import pandas as pd
+from datetime import datetime
 from docx import Document
 
 import hmac
-import archive_manager
+
+# =====================
+# Archiving Logic (Merged from archive_manager.py)
+# =====================
+ARCHIVE_FILE = "archivio_piatti.xlsx"
+IMAGES_DIR = "archived_images"
+
+def initialize_archive():
+    """Crea il file Excel con gli header se non esiste."""
+    if not os.path.exists(ARCHIVE_FILE):
+        df = pd.DataFrame(columns=[
+            "seriale", 
+            "titolo", 
+            "ricetta", 
+            "frase_iconica", 
+            "immagine_path", 
+            "tags", 
+            "data_archiviazione"
+        ])
+        df.to_excel(ARCHIVE_FILE, index=False)
+    
+    if not os.path.exists(IMAGES_DIR):
+        os.makedirs(IMAGES_DIR)
+
+def get_next_serial():
+    """Ritorna il prossimo seriale disponibile."""
+    if not os.path.exists(ARCHIVE_FILE):
+        return 1
+    try:
+        df = pd.read_excel(ARCHIVE_FILE)
+        if df.empty:
+            return 1
+        return df["seriale"].max() + 1
+    except Exception:
+        return 1
+
+def add_archive_entry(titolo, ricetta, frase, immagine_bytes, tags):
+    """Aggiunge una riga all'archivio Excel e salva l'immagine."""
+    initialize_archive()
+    
+    serial = get_next_serial()
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    # Salva immagine
+    img_filename = f"piatto_{serial}_{timestamp}.png"
+    img_path = os.path.join(IMAGES_DIR, img_filename)
+    
+    with open(img_path, "wb") as f:
+        f.write(immagine_bytes)
+    
+    # Prepara dati
+    new_data = {
+        "seriale": serial,
+        "titolo": titolo,
+        "ricetta": ricetta,
+        "frase_iconica": frase,
+        "immagine_path": img_path,
+        "tags": tags,
+        "data_archiviazione": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+    
+    # Carica, appendi e salva
+    try:
+        df = pd.read_excel(ARCHIVE_FILE)
+        df = pd.concat([df, pd.DataFrame([new_data])], ignore_index=True)
+        df.to_excel(ARCHIVE_FILE, index=False)
+    except Exception as e:
+        st.error(f"Errore salvataggio Excel: {e}")
+        return None, None
+    
+    return serial, img_path
 
 def require_password():
     if st.session_state.get("auth_ok"):
@@ -581,7 +646,7 @@ with right:
                                     try:
                                         img_bytes = generate_dish_image(ricetta)
                                         if img_bytes:
-                                            serial, path = archive_manager.add_entry(
+                                            serial, path = add_archive_entry(
                                                 titolo=titolo_piatto.strip(),
                                                 ricetta=ricetta,
                                                 frase=txt,
