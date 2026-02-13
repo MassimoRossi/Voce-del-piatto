@@ -670,7 +670,7 @@ with right:
                         st.session_state.pop_counters[pop_key_id] = 0
                     
                     # Usiamo un popover per raccogliere titolo e tags in modo pulito
-                    with st.popover("Archivia piatto", key=f"{pop_key_id}_{st.session_state.pop_counters[pop_key_id]}"):
+                    with st.popover(label="Archivia piatto", key=f"{pop_key_id}_{st.session_state.pop_counters[pop_key_id]}"):
                         st.subheader("Dati per l'archivio:")
                         
                         # --- SINCRONIZZAZIONE INTEGRATA ---
