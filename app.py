@@ -174,6 +174,10 @@ if "recipe_confirmed" not in st.session_state:
 if "last_confirmed_ricetta" not in st.session_state:
     st.session_state.last_confirmed_ricetta = ""
 
+# Archivio risultati sessione (per download immediati)
+if "archival_results" not in st.session_state:
+    st.session_state.archival_results = {} # dict: key -> {'excel_bytes': b, 'img_bytes': b, 'serial': s}
+
 def reset_confirmation():
     st.session_state.recipe_confirmed = False
 
@@ -719,11 +723,15 @@ with right:
                                         )
                                         
                                         if serial:
+                                            with open(ARCHIVE_FILE, "rb") as f:
+                                                excel_bytes = f.read()
+                                            
+                                            st.session_state.archival_results[f"res_{r.replace(' ', '_')}"] = {
+                                                "excel_bytes": excel_bytes,
+                                                "img_bytes": img_bytes,
+                                                "serial": serial
+                                            }
                                             st.success(f"Piatto archiviato! (Seriale: {serial})")
-                                            if path:
-                                                st.info(f"Immagine salvata in: {path}")
-                                            else:
-                                                st.info("Piatto salvato senza immagine.")
                                             st.balloons()
                                         else:
                                             st.error("Errore durante il salvataggio dei dati.")
@@ -731,7 +739,38 @@ with right:
                                     except Exception as e:
                                         st.error(f"Errore durante l'archiviazione: {e}")
                         
+                        # --- DOWNLOAD IMMEDIATI (DOPO SUCCESSO) ---
+                        res_key = f"res_{r.replace(' ', '_')}"
+                        if res_key in st.session_state.archival_results:
+                            res = st.session_state.archival_results[res_key]
+                            st.divider()
+                            st.write("📥 Scarica subito sul tuo PC:")
+                            
+                            st.download_button(
+                                "📊 Scarica Excel Aggiornato",
+                                data=res["excel_bytes"],
+                                file_name="archivio_piatti.xlsx",
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                key=f"dl_xl_{res_key}",
+                                use_container_width=True
+                            )
+                            
+                            if res["img_bytes"]:
+                                st.download_button(
+                                    f"🖼️ Scarica Immagine ({res['serial']}.png)",
+                                    data=res["img_bytes"],
+                                    file_name=f"{res['serial']}.png",
+                                    mime="image/png",
+                                    key=f"dl_img_{res_key}",
+                                    use_container_width=True
+                                )
+                            
+                            st.info("💡 Nota: Scegli la cartella del tuo archivio locale quando il browser lo chiede.")
+
                         if st.button("Annulla", key=f"btn_canc_{r.replace(' ', '_')}", use_container_width=True):
+                            # Pulisce anche i risultati precedenti se si annulla/chiude
+                            if res_key in st.session_state.archival_results:
+                                del st.session_state.archival_results[res_key]
                             st.rerun()
 
     else:
