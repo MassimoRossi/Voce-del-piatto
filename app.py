@@ -69,8 +69,8 @@ def add_archive_entry(titolo, ricetta, frase, immagine_bytes, tags):
     
     img_path = ""
     if immagine_bytes:
-        # Salva immagine
-        img_filename = f"piatto_{serial}_{timestamp}.png"
+        # Salva immagine usando il seriale come nome file
+        img_filename = f"{serial}.png"
         img_path = os.path.join(IMAGES_DIR, img_filename)
         with open(img_path, "wb") as f:
             f.write(immagine_bytes)
@@ -439,10 +439,16 @@ with st.sidebar:
     # --- SINCRONIZZAZIONE (Upload) ---
     st.write("🔄 Sincronizza dati:")
     up_file = st.file_uploader("Carica archivio Excel locale", type=["xlsx"], help="Carica il tuo file Excel se hai fatto modifiche manuali (es. tag aggiunti) per non perderle.")
+    
     if up_file:
-        with open(ARCHIVE_FILE, "wb") as f:
-            f.write(up_file.getbuffer())
-        st.success("Archivio sincronizzato!")
+        # Verifichiamo se abbiamo già processato questo specifico file per evitare di sovrascrivere l'archivio ogni volta che l'app gira
+        file_key = f"{up_file.name}_{up_file.size}"
+        if st.session_state.get("last_synced_file") != file_key:
+            with open(ARCHIVE_FILE, "wb") as f:
+                f.write(up_file.getbuffer())
+            st.session_state["last_synced_file"] = file_key
+            st.success("Archivio sincronizzato!")
+            st.rerun() # Ricarichiamo per assicurarci che Excel veda il nuovo file immediatamente
 
     st.divider()
 
