@@ -1,4 +1,11 @@
 import os
+import sys
+
+# Assicura che la cartella corrente sia nel path per trovare archive_manager
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.append(current_dir)
+
 import base64
 import tempfile
 import streamlit as st
