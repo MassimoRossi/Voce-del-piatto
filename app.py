@@ -349,8 +349,6 @@ button[kind="primary"] {
 </style>
 """, unsafe_allow_html=True)
 
-
-
 # =====================
 # Header
 # =====================
@@ -358,8 +356,6 @@ st.markdown("""
 <div style="text-align:center; margin-top:2.2rem; margin-bottom:1.2rem;">
   <div style="font-size:3rem; font-weight:800; color:#C9A227; line-height:1.05; letter-spacing:0.5px;">
     Voce<span style="opacity:.9;">•</span>del<span style="opacity:.9;">•</span>Piatto
-
-
   </div>
   <div style="font-size:1rem; color:#6b6b6b; margin-top:0.35rem;">
     Il piatto, raccontato bene.
@@ -370,7 +366,6 @@ st.markdown("""
 # =====================
 # Home / Tool switch
 # =====================
-
 
 page = st.radio(
         "",
@@ -419,6 +414,8 @@ if page == "Home":
           <div style="font-weight:700; color:#C9A227;">Output pronto</div>
           <div style="margin-top:6px;">Menu o sala, supporto lingue, export DOCX incluso.</div>
         </div>
+        """, unsafe_allow_html=True)
+
     st.stop()
 
 # =====================
@@ -701,5 +698,3 @@ with right:
             <b>Nessun output ancora.</b> Inserisci ricetta e premi <b>Genera</b>.
         </div>
         """, unsafe_allow_html=True)
-
-
