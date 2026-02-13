@@ -81,7 +81,7 @@ def add_archive_entry(titolo, ricetta, frase, immagine_bytes, tags):
         "titolo": titolo,
         "ricetta": ricetta,
         "frase_iconica": frase,
-        "immagine_path": img_path,
+        "immagine_path": img_filename if immagine_bytes else "",
         "tags": tags,
         "data_archiviazione": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
@@ -174,9 +174,12 @@ if "recipe_confirmed" not in st.session_state:
 if "last_confirmed_ricetta" not in st.session_state:
     st.session_state.last_confirmed_ricetta = ""
 
-# Archivio risultati sessione (per download immediati)
 if "archival_results" not in st.session_state:
     st.session_state.archival_results = {} # dict: key -> {'excel_bytes': b, 'img_bytes': b, 'serial': s}
+
+# Contatori per resettare i popover
+if "pop_counters" not in st.session_state:
+    st.session_state.pop_counters = {}
 
 def reset_confirmation():
     st.session_state.recipe_confirmed = False
@@ -435,43 +438,10 @@ if page == "Home":
     st.stop()
 
 # =====================
-# Sidebar: Cloud Info + Archive Management
+
 # =====================
-with st.sidebar:
-    st.subheader("Archivio")
-    
-    # --- SINCRONIZZAZIONE (Upload) ---
-    st.write("🔄 Sincronizza dati:")
-    up_file = st.file_uploader("Carica archivio Excel locale", type=["xlsx"], help="Carica il tuo file Excel se hai fatto modifiche manuali (es. tag aggiunti) per non perderle.")
-    
-    if up_file:
-        # Verifichiamo se abbiamo già processato questo specifico file per evitare di sovrascrivere l'archivio ogni volta che l'app gira
-        file_key = f"{up_file.name}_{up_file.size}"
-        if st.session_state.get("last_synced_file") != file_key:
-            with open(ARCHIVE_FILE, "wb") as f:
-                f.write(up_file.getbuffer())
-            st.session_state["last_synced_file"] = file_key
-            st.success("Archivio sincronizzato!")
-            st.rerun() # Ricarichiamo per assicurarci che Excel veda il nuovo file immediatamente
-
-    st.divider()
-
-    # --- DOWNLOAD ---
-    if os.path.exists(ARCHIVE_FILE):
-        st.write("Scarica l'intero archivio (Excel + Immagini) per non perdere i dati:")
-        zip_data = create_archive_zip()
-        st.download_button(
-            "📦 Scarica Archivio Completo (ZIP)",
-            data=zip_data,
-            file_name="archivio_voce_del_piatto.zip",
-            mime="application/zip",
-            use_container_width=True
-        )
-    else:
-        st.info("L'archivio è vuoto. Archivia il primo piatto per vederlo qui.")
-    
-    st.divider()
-    st.caption("⚠️ Nota Cloud: I file salvati su Streamlit Cloud sono temporanei. Scarica l'archivio regolarmente.")
+# Main App Logic
+# =====================
 
 reg_names = list(REGISTRI.keys())
 default_regs = [r for r in ["Minimal contemporaneo", "Classico elegante"] if r in reg_names]
@@ -693,9 +663,27 @@ with right:
                     )
 
                 with col_d2:
+                    # Usiamo un contatore per forzare la chiusura del popover quando necessario
+                    pop_key_id = f"pop_{r.replace(' ', '_')}"
+                    if pop_key_id not in st.session_state.pop_counters:
+                        st.session_state.pop_counters[pop_key_id] = 0
+                    
                     # Usiamo un popover per raccogliere titolo e tags in modo pulito
-                    with st.popover("Archivia piatto", use_container_width=True):
+                    with st.popover("Archivia piatto", use_container_width=True, key=f"{pop_key_id}_{st.session_state.pop_counters[pop_key_id]}"):
                         st.subheader("Dati per l'archivio:")
+                        
+                        # --- SINCRONIZZAZIONE INTEGRATA ---
+                        with st.expander("🔄 Sincronizza archivio locale", expanded=not os.path.exists(ARCHIVE_FILE)):
+                            up_file = st.file_uploader("Carica il tuo Excel per non perdere le modifiche", type=["xlsx"], key=f"up_{r.replace(' ', '_')}")
+                            if up_file:
+                                file_key = f"{up_file.name}_{up_file.size}"
+                                if st.session_state.get("last_synced_file") != file_key:
+                                    with open(ARCHIVE_FILE, "wb") as f:
+                                        f.write(up_file.getbuffer())
+                                    st.session_state["last_synced_file"] = file_key
+                                    st.success("Archivio sincronizzato!")
+                                    st.rerun()
+                        
                         titolo_piatto = st.text_input("Titolo del piatto", key=f"title_{r.replace(' ', '_')}")
                         tags_piatto = st.text_input("Tags (es. mare, primo, etc.)", key=f"tags_{r.replace(' ', '_')}")
                         
@@ -714,7 +702,7 @@ with right:
                                             with st.spinner(f"Generazione immagine ({img_model})..."):
                                                 img_bytes = generate_dish_image(ricetta, model=img_model)
                                         
-                                        serial, path = add_archive_entry(
+                                        serial, img_filename = add_archive_entry(
                                             titolo=titolo_piatto.strip(),
                                             ricetta=ricetta,
                                             frase=txt,
@@ -723,19 +711,20 @@ with right:
                                         )
                                         
                                         if serial:
+                                            # Rilegge per avere la versione aggiornata
                                             with open(ARCHIVE_FILE, "rb") as f:
                                                 excel_bytes = f.read()
                                             
                                             st.session_state.archival_results[f"res_{r.replace(' ', '_')}"] = {
                                                 "excel_bytes": excel_bytes,
                                                 "img_bytes": img_bytes,
-                                                "serial": serial
+                                                "serial": serial,
+                                                "img_filename": img_filename
                                             }
                                             st.success(f"Piatto archiviato! (Seriale: {serial})")
                                             st.balloons()
                                         else:
                                             st.error("Errore durante il salvataggio dei dati.")
-                                            
                                     except Exception as e:
                                         st.error(f"Errore durante l'archiviazione: {e}")
                         
@@ -757,18 +746,18 @@ with right:
                             
                             if res["img_bytes"]:
                                 st.download_button(
-                                    f"🖼️ Scarica Immagine ({res['serial']}.png)",
+                                    f"🖼️ Scarica Immagine ({res['img_filename']})",
                                     data=res["img_bytes"],
-                                    file_name=f"{res['serial']}.png",
+                                    file_name=res["img_filename"],
                                     mime="image/png",
                                     key=f"dl_img_{res_key}",
                                     use_container_width=True
                                 )
-                            
-                            st.info("💡 Nota: Scegli la cartella del tuo archivio locale quando il browser lo chiede.")
-
-                        if st.button("Annulla", key=f"btn_canc_{r.replace(' ', '_')}", use_container_width=True):
-                            # Pulisce anche i risultati precedenti se si annulla/chiude
+                        
+                        if st.button("Annulla / Chiudi", key=f"btn_canc_{r.replace(' ', '_')}", use_container_width=True):
+                            # Incrementiamo il contatore per forzare la chiusura del popover (cambiando la sua key)
+                            st.session_state.pop_counters[pop_key_id] += 1
+                            # Pulisce anche i risultati precedenti
                             if res_key in st.session_state.archival_results:
                                 del st.session_state.archival_results[res_key]
                             st.rerun()
