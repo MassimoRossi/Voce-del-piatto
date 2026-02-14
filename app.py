@@ -462,23 +462,12 @@ with left:
     st.subheader("Impostazioni")
 
     with st.form("controls", clear_on_submit=False):
-        sperimentazione = st.toggle("Confronta stili", value=True, key="sp_sperimentazione")
-
-        if sperimentazione:
-            registri_sel = st.multiselect(
+        registri_sel = st.multiselect(
             "Registri",
             reg_names,
-            default=[],
+            default=default_regs,
             key="sp_registri_multi"
-    )
-        else:
-            registro = st.selectbox(
-                "Registro",
-                reg_names,
-                index=default_idx,
-                key="sp_registro_single"
-            )
-            registri_sel = [registro]
+        )
 
 
         out_type = st.radio("Tipo testo", ["Menu", "Cameriere"], key="sp_out_type")
@@ -666,7 +655,10 @@ with right:
                 with col_d2:
                     # Alternativa stabile al popover per evitare TypeError in certi ambienti
                     exp_key = f"exp_arch_{r.replace(' ', '_')}"
-                    with st.expander("📂 Archivia piatto", expanded=False):
+                    if exp_key not in st.session_state:
+                        st.session_state[exp_key] = False
+                    
+                    with st.expander("📂 Archivia piatto", expanded=st.session_state[exp_key]):
                         st.subheader("Dati per l'archivio:")
                         
                         # --- SINCRONIZZAZIONE INTEGRATA ---
@@ -717,7 +709,7 @@ with right:
                                                 "excel_bytes": excel_bytes,
                                                 "img_bytes": img_bytes,
                                                 "serial": serial,
-                                                "img_filename": img_filename
+                                                "img_filename": os.path.basename(img_filename)
                                             }
                                             st.success(f"Piatto archiviato! (Seriale: {serial})")
                                             st.balloons()
@@ -755,6 +747,7 @@ with right:
                         if st.button("Pulisci / Chiudi", key=f"btn_canc_{r.replace(' ', '_')}", use_container_width=True):
                             if res_key in st.session_state.archival_results:
                                 del st.session_state.archival_results[res_key]
+                            st.session_state[exp_key] = False
                             st.rerun()
 
     else:
