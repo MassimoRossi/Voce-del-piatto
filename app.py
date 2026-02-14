@@ -607,6 +607,7 @@ with right:
              st.error("Devi confermare la ricetta.")
         else:
             st.session_state.outputs = {}
+            st.session_state.archival_results = {}  # Pulizia risultati precedenti
             st.session_state.last_params = {
                 "registri": registri_sel,
                 "tipo": out_type,
@@ -709,7 +710,7 @@ with right:
                                                 "excel_bytes": excel_bytes,
                                                 "img_bytes": img_bytes,
                                                 "serial": serial,
-                                                "img_filename": os.path.basename(img_filename)
+                                                "img_filename": f"{serial}.png"
                                             }
                                             st.success(f"Piatto archiviato! (Seriale: {serial})")
                                             st.balloons()
