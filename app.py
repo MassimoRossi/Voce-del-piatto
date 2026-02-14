@@ -308,23 +308,53 @@ def export_docx(titolo: str, contenuto: str) -> bytes:
     bio.seek(0)
     return bio.read()
 
-def generate_dish_image(ricetta: str, model="dall-e-3"):
-    """Genera l'immagine del piatto in versione ristorante stellato tramite DALL-E."""
-    prompt = f"A high-end, gourmet, michelin-starred restaurant version of the following dish: {ricetta}. Professional food photography, elegant plating, soft lighting."
+def generate_dish_image(ricetta: str, model="gpt-image-1.5"):
+    """Genera l'immagine del piatto in versione ristorante stellato."""
+    prompt = f"""
+Create a plated, finished dish inspired by the following recipe: {ricetta}.
+The dish must be fully prepared and ready to serve.
+Only one single plate visible. Centered composition.
+No ingredients outside the plate. No bowls, no glasses, no cutlery, no table props.
+White porcelain plate or matte black stoneware plate.
+Isolated plate on seamless neutral elegant background (light grey or soft beige).
+Minimalist fine dining plating with generous negative space for menu text.
+Professional studio food photography, soft diffused lighting.
+The entire frame must contain only the plate. Clean background with no texture. Luxury Michelin-star restaurant aesthetic.
+""".strip()
+
     try:
-        response = client.images.generate(
-            model=model,
-            prompt=prompt,
-            size="1024x1024" if model == "dall-e-3" else "512x512",
-            quality="standard",
-            n=1,
-        )
-        image_url = response.data[0].url
-        img_data = requests.get(image_url).content
-        return img_data
+        # --- Parametri per modello (minimo indispensabile) ---
+        kwargs = {"model": model, "prompt": prompt, "n": 1}
+
+        if model.startswith("gpt-image-"):
+            # GPT Image: size 1024/1536 e quality low/medium/high/auto
+            kwargs["size"] = "1024x1024"
+            kwargs["quality"] = "high"
+        elif model == "dall-e-3":
+            kwargs["size"] = "1024x1024"
+            kwargs["quality"] = "standard"  # oppure "hd"
+            kwargs["response_format"] = "url"
+        else:  # dall-e-2
+            kwargs["size"] = "512x512"
+            kwargs["response_format"] = "url"
+
+        response = client.images.generate(**kwargs)
+        item = response.data[0]
+
+        # GPT Image: base64
+        if getattr(item, "b64_json", None):
+            return base64.b64decode(item.b64_json)
+
+        # DALL·E: URL
+        if getattr(item, "url", None):
+            return requests.get(item.url, timeout=30).content
+
+        raise RuntimeError("Risposta immagini inattesa: manca sia b64_json sia url.")
+
     except Exception as e:
         st.error(f"Errore nella generazione dell'immagine ({model}): {e}")
         return None
+
 
 # =====================
 # UX Fine: mini-CSS (pulizia visiva)
@@ -681,7 +711,7 @@ with right:
                         
                         st.divider()
                         do_gen_img = st.checkbox("Genera immagine AI", value=True, key=f"gen_img_{r.replace(' ', '_')}")
-                        img_model = st.selectbox("Modello immagine", ["dall-e-3", "dall-e-2"], index=0, key=f"model_img_{r.replace(' ', '_')}", disabled=not do_gen_img)
+                        img_model = st.selectbox("Modello immagine", ["gpt-image-1.5", "gpt-image-1-mini", "dall-e-3", "dall-e-2"], index=0, key=f"model_img_{r.replace(' ', '_')}", disabled=not do_gen_img)
                         
                         if st.button("Conferma Archiviazione", key=f"btn_arch_{r.replace(' ', '_')}", type="primary", use_container_width=True):
                             if not titolo_piatto.strip():
