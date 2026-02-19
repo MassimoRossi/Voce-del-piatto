@@ -4,6 +4,9 @@ from modules_cover.cover_data import load_piatti
 from modules_cover.cover_render import render_cover_pdf
 
 
+
+
+
 def cover_ui(base_dir=r"c:\cover_menu"):
     BASE_DIR = base_dir
 
@@ -106,25 +109,46 @@ def cover_ui(base_dir=r"c:\cover_menu"):
                 has_img = bool(p.get("img_path"))
                 has_frase = bool(p.get("frase"))
 
-                c1, c2, c3, c4 = st.columns([6, 2, 2, 2])
+                # funzione spostamento
+                def move_item(i, direction):
+                    j = i + direction
+                    if 0 <= j < len(st.session_state.draft_items):
+                        items = st.session_state.draft_items
+                        items[i], items[j] = items[j], items[i]
+                        st.session_state.draft_items = items
+                        st.rerun()
+
+                c1, c2, c3, c4, c5, c6 = st.columns([5, 1, 1, 1, 1, 1])
+
                 with c1:
                     st.write(f"**{idx+1}. {titolo}**  _(#{s})_")
+
                 with c2:
+                    if st.button("↑", key=f"up_{s}_{idx}", disabled=(idx == 0)):
+                        move_item(idx, -1)
+
+                with c3:
+                    if st.button("↓", key=f"down_{s}_{idx}", disabled=(idx == len(st.session_state.draft_items)-1)):
+                        move_item(idx, 1)
+
+                with c4:
                     it["img"] = st.checkbox(
                         "Img",
                         value=it["img"],
-                        disabled=not has_img,  # se non esiste file, non selezionabile
-                        key=f"img_{s}"
+                        disabled=not has_img,
+                        key=f"img_{s}_{idx}"
                     )
-                with c3:
+
+                with c5:
                     it["frase"] = st.checkbox(
                         "Frase",
                         value=it["frase"],
-                        disabled=not has_frase,  # se frase vuota, non selezionabile
-                        key=f"fr_{s}"
+                        disabled=not has_frase,
+                        key=f"fr_{s}_{idx}"
                     )
-                with c4:
-                    if st.button("🗑️", key=f"rm_{s}", help="Rimuovi"):
+
+                with c6:
+                    if st.button("🗑️", key=f"rm_{s}_{idx}", help="Rimuovi"):
                         st.session_state.draft_items.pop(idx)
                         st.rerun()
 
@@ -161,7 +185,9 @@ def cover_ui(base_dir=r"c:\cover_menu"):
             )
 
     st.write("----")
-    if st.button("📄 Genera PDF (test layout)"):
+
+    if st.button("📄 Genera PDF", use_container_width=True):
+
         if not st.session_state.confirmed_items:
             st.warning("Nessuna selezione confermata.")
         else:
@@ -172,8 +198,6 @@ def cover_ui(base_dir=r"c:\cover_menu"):
 
             background_image_path = os.path.join(BASE_DIR, "assets", "background_a4.png")
 
-            
-
             render_cover_pdf(
                 output_path=out_path,
                 layout_key=st.session_state.confirmed_layout,
@@ -182,12 +206,20 @@ def cover_ui(base_dir=r"c:\cover_menu"):
                 items=st.session_state.confirmed_items,
                 piatto_by_seriale=piatto_by_seriale,
                 background_image_path=background_image_path
-
             )
 
-            st.success("Creato PDF test.")
+            st.success("Cover Menu generato con successo.")
+
             with open(out_path, "rb") as f:
-                st.download_button("Scarica cover_test.pdf", data=f, file_name="cover_test.pdf", mime="application/pdf")
+                st.download_button(
+                    "⬇️ Scarica PDF",
+                    data=f.read(),
+                    file_name="cover_test.pdf",
+                    mime="application/pdf",
+                    use_container_width=True
+                )
+
+
 
 
     st.write("----")
