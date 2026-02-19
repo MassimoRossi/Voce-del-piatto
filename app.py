@@ -419,11 +419,16 @@ st.markdown("""
 
 page = st.radio(
         "",
-        ["Home", "Tool"],
+        ["Home", "Tool" , "Cover Menu"],
         horizontal=True,
         index=0,
         label_visibility="collapsed"
         )
+
+
+
+
+
 
 st.divider()
 
@@ -467,6 +472,22 @@ if page == "Home":
         """, unsafe_allow_html=True)
 
     st.stop()
+
+# Cover Menu
+
+if page == "Cover Menu":
+    import os
+    BASE_DIR = r"c:\cover_menu"
+
+    if not os.path.exists(BASE_DIR):
+        st.warning("⚠️ Cover Menu disponibile solo in ambiente locale.")
+        st.stop()
+
+    from modules_cover.cover_app_ui import cover_ui
+    cover_ui(BASE_DIR)
+    st.stop()
+
+
 
 # =====================
 
@@ -792,3 +813,5 @@ with right:
             <b>Nessun output ancora.</b> Inserisci ricetta e premi <b>Genera</b>.
         </div>
         """, unsafe_allow_html=True)
+
+
